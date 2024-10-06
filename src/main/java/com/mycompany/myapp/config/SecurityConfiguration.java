@@ -5,12 +5,16 @@ import com.mycompany.myapp.security.jwt.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -75,6 +79,7 @@ public class SecurityConfiguration {
             .antMatchers("/api/authenticate").permitAll()
             .antMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .antMatchers("/api/**").authenticated()
+            .antMatchers("/personal/**").hasAuthority(AuthoritiesConstants.USER)
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/health/**").permitAll()
             .antMatchers("/management/info").permitAll()
@@ -86,6 +91,23 @@ public class SecurityConfiguration {
             .apply(securityConfigurerAdapter());
         return http.build();
         // @formatter:on
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails admin = org.springframework.security.core.userdetails.User
+            .withUsername("admin")
+            .password("{noop}admin")
+            .roles("ADMIN")
+            .build();
+
+        UserDetails rohit = org.springframework.security.core.userdetails.User
+            .withUsername("rohit")
+            .password("{noop}user")
+            .roles("USER")
+            .build();
+
+        return new InMemoryUserDetailsManager(admin, rohit);
     }
 
     private JWTConfigurer securityConfigurerAdapter() {
